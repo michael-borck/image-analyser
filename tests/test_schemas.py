@@ -1,10 +1,10 @@
 # tests/test_schemas.py
 """Schema round-trip tests."""
 
-from image_analyser.schemas import (
-    AnalysisResult, BBox, Barcode, Caption, Colour, Exif, Failed, Hash,
-    Metadata, Object, Ocr, OcrBlock, PaletteEntry, Quality, Skipped,
-)
+import pytest
+from pydantic import ValidationError
+
+from image_analyser.schemas import AnalysisResult, Skipped
 
 
 def test_analysis_result_minimum_fields_round_trip():
@@ -48,7 +48,5 @@ def test_analysis_result_minimum_fields_round_trip():
 
 
 def test_skipped_reason_is_required():
-    import pytest
-    from pydantic import ValidationError
     with pytest.raises(ValidationError):
         Skipped.model_validate({"name": "objects"})
