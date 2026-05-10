@@ -137,8 +137,11 @@ def analyse(img: Image.Image) -> tuple[Caption | None, str | None]:
     # auto
     key = os.getenv(PROVIDER_KEYS.get(provider, ""))
     if key:
-        text, _prov, used = _caption_api(img, provider, api_model_override)
-        return Caption(text=text, backend="api", model=used), None
+        try:
+            text, _prov, used = _caption_api(img, provider, api_model_override)
+            return Caption(text=text, backend="api", model=used), None
+        except ImportError:
+            logger.debug("caption api provider package not installed for %s; falling back", provider)
     if _transformers_importable():
         text = _caption_local(img, local_model)
         return Caption(text=text, backend="local", model=local_model), None
