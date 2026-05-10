@@ -47,6 +47,9 @@ def analyse(img: Image.Image, threshold: float | None = None) -> tuple[list[Obje
     try:
         pipe = _get_pipeline(_model(), _device())
         raw = pipe(img.convert("RGB"))
+    except ImportError as e:
+        logger.warning("object detection skipped — missing dependency: %s", e)
+        return None, "ml extra not installed"
     except Exception as e:
         logger.warning("object detection failed: %s", e)
         raise

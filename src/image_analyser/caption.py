@@ -142,7 +142,14 @@ def analyse(img: Image.Image) -> tuple[Caption | None, str | None]:
             return Caption(text=text, backend="api", model=used), None
         except ImportError:
             logger.debug("caption api provider package not installed for %s; falling back", provider)
+        except Exception as e:
+            logger.debug("caption api call failed for %s; falling back to local: %s", provider, e)
     if _transformers_importable():
-        text = _caption_local(img, local_model)
-        return Caption(text=text, backend="local", model=local_model), None
+        try:
+            text = _caption_local(img, local_model)
+            return Caption(text=text, backend="local", model=local_model), None
+        except ImportError:
+            logger.debug("local captioning dependencies not available; skipping")
+        except Exception as e:
+            logger.debug("local captioning failed; skipping: %s", e)
     return None, "no captioning backend available"
