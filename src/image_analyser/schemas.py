@@ -41,7 +41,7 @@ class Exif(_Strict):
 
 class C2pa(_Strict):
     present: bool
-    manifest: dict | None = None
+    manifest: dict[str, object] | None = None
     ai_generated_claim: bool | None = None
 
 
@@ -52,8 +52,8 @@ class IccProfile(_Strict):
 
 class Metadata(_Strict):
     exif: Exif | None = None
-    iptc: dict | None = None
-    xmp: dict | None = None
+    iptc: dict[str, object] | None = None
+    xmp: dict[str, object] | None = None
     c2pa: C2pa | None = None
     icc_profile: IccProfile | None = None
 

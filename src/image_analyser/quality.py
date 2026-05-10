@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import struct
+from typing import cast
 
 import numpy as np
 from PIL import Image
@@ -12,7 +13,7 @@ from .schemas import Exposure, Quality
 
 def _grayscale(arr: np.ndarray) -> np.ndarray:
     if arr.ndim == 3:
-        return arr.mean(axis=2)
+        return cast(np.ndarray, arr.mean(axis=2))
     return arr.astype(float)
 
 
