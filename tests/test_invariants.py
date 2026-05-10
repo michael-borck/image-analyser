@@ -52,7 +52,7 @@ EXPECTED_REASONS = {
     "objects": {"ml extra not installed"},
     "caption": {"disabled by config", "no captioning backend available", "ml extra not installed", "api provider not configured"},
     "ocr": {"disabled by config", "no ocr engine available", "tesseract not installed", "easyocr not installed"},
-    "barcode": set(),  # always runs (no extras)
+    "barcode": {"libzbar not loadable"},  # may skip on systems where libzbar isn't installed
 }
 
 

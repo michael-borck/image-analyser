@@ -85,7 +85,13 @@ class ImageAnalyser:
             c = self._safe("colour", failed, lambda: colour.analyse(img))
         b: list[Any] = []
         if enabled("barcode"):
-            b = self._safe("barcode", failed, lambda: barcode.analyse(img)) or []
+            b_result = self._safe("barcode", failed, lambda: barcode.analyse(img))
+            if b_result is not None:
+                values, reason = b_result
+                if reason:
+                    skipped.append(Skipped(name="barcode", reason=reason))
+                else:
+                    b = values or []
 
         # ---- toggleable Tier 2 ----
         objs = None

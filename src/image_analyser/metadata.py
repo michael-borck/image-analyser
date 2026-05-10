@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import magic
 from PIL import ExifTags, Image
 from PIL.ExifTags import GPSTAGS, TAGS
 
@@ -19,6 +18,23 @@ logger = logging.getLogger(__name__)
 _MODE_BIT_DEPTH = {"1": 1, "L": 8, "P": 8, "RGB": 8, "RGBA": 8, "CMYK": 8, "I": 32, "F": 32}
 
 
+def _detect_mime(raw_bytes: bytes, fmt: str) -> str:
+    """Detect MIME via libmagic if loadable, else fall back to format-based.
+
+    `python-magic` loads libmagic via ctypes at import time; on Macs without
+    `brew install libmagic` this would crash `import image_analyser`. Defer
+    the import so the package loads everywhere; degrade to the Pillow format
+    if libmagic isn't available.
+    """
+    if not raw_bytes:
+        return f"image/{fmt.lower()}"
+    try:
+        import magic
+        return magic.from_buffer(raw_bytes, mime=True)
+    except Exception:  # noqa: BLE001  — ImportError, OSError, magic-internal errors all degrade gracefully
+        return f"image/{fmt.lower()}"
+
+
 def basic(img: Image.Image, raw_bytes: bytes) -> dict[str, Any]:
     """Always-on identity fields. Never raises."""
     w, h = img.size
@@ -29,10 +45,7 @@ def basic(img: Image.Image, raw_bytes: bytes) -> dict[str, Any]:
     else:
         aspect = "portrait"
     fmt = (img.format or "").upper() or "UNKNOWN"
-    try:
-        mime = magic.from_buffer(raw_bytes, mime=True) if raw_bytes else f"image/{fmt.lower()}"
-    except Exception:
-        mime = f"image/{fmt.lower()}"
+    mime = _detect_mime(raw_bytes, fmt)
     return {
         "format": fmt,
         "mime_type": mime,
