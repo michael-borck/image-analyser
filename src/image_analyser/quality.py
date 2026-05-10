@@ -17,8 +17,10 @@ def _grayscale(arr: np.ndarray) -> np.ndarray:
 
 
 def _laplacian_variance(arr: np.ndarray) -> float:
-    """3x3 Laplacian filter (no scipy)."""
+    """3x3 Laplacian filter (no scipy). Returns 0.0 for images smaller than 3x3."""
     g = _grayscale(arr)
+    if g.shape[0] < 3 or g.shape[1] < 3:
+        return 0.0
     # |0  1 0|
     # |1 -4 1|
     # |0  1 0|
@@ -42,8 +44,13 @@ def _exposure(arr: np.ndarray) -> Exposure:
 
 
 def _noise_estimate(arr: np.ndarray) -> float:
-    """Rough noise estimate: stddev of high-frequency residual (image - 3x3 mean blur)."""
+    """Rough noise estimate: stddev of high-frequency residual (image - 3x3 mean blur).
+
+    Returns 0.0 for images smaller than 3x3.
+    """
     g = _grayscale(arr)
+    if g.shape[0] < 3 or g.shape[1] < 3:
+        return 0.0
     # 3x3 mean
     blurred = (
         g[:-2, :-2] + g[:-2, 1:-1] + g[:-2, 2:] +
