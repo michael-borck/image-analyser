@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "image-analyser"
-version = "0.1.0"
+version = "0.1.1"
 description = "Static image analysis (CLI + FastAPI) for the analyser family"
 readme = "README.md"
 license = {text = "MIT"}
