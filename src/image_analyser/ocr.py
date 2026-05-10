@@ -51,7 +51,17 @@ def _ocr_tesseract(img: Image.Image) -> Ocr:
             )
         )
     text = " ".join(b.text for b in blocks)
-    return Ocr(text=text, blocks=blocks, engine="tesseract")
+    average_confidence = (
+        sum(b.confidence for b in blocks) / len(blocks)
+        if blocks
+        else 0.0
+    )
+    return Ocr(
+        text=text,
+        blocks=blocks,
+        engine="tesseract",
+        average_confidence=round(average_confidence, 4),
+    )
 
 
 def _ocr_easyocr(img: Image.Image) -> Ocr:
@@ -70,7 +80,17 @@ def _ocr_easyocr(img: Image.Image) -> Ocr:
             )
         )
     text = " ".join(b.text for b in blocks)
-    return Ocr(text=text, blocks=blocks, engine="easyocr")
+    average_confidence = (
+        sum(b.confidence for b in blocks) / len(blocks)
+        if blocks
+        else 0.0
+    )
+    return Ocr(
+        text=text,
+        blocks=blocks,
+        engine="easyocr",
+        average_confidence=round(average_confidence, 4),
+    )
 
 
 def analyse(img: Image.Image) -> tuple[Ocr | None, str | None]:

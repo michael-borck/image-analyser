@@ -105,6 +105,8 @@ class Caption(_Strict):
     text: str
     backend: str = Field(pattern=r"^(local|api)$")
     model: str
+    tokens_generated: int | None = None
+    cost_estimate_usd: float | None = None
 
 
 class OcrBlock(_Strict):
@@ -117,6 +119,7 @@ class Ocr(_Strict):
     text: str
     blocks: list[OcrBlock]
     engine: str = Field(pattern=r"^(tesseract|easyocr)$")
+    average_confidence: float = 0.0  # mean of blocks[].confidence; 0.0 if no blocks
 
 
 class Skipped(_Strict):
