@@ -16,7 +16,8 @@ def test_skips_when_transformers_missing(monkeypatch):
     assert reason == "ml extra not installed"
 
 
-def test_filters_below_threshold():
+def test_filters_below_threshold(monkeypatch):
+    monkeypatch.setattr("image_analyser.objects._transformers_importable", lambda: True)
     fake_pipeline = MagicMock(return_value=[
         {"label": "cat", "score": 0.9, "box": {"xmin": 0, "ymin": 0, "xmax": 5, "ymax": 5}},
         {"label": "dog", "score": 0.3, "box": {"xmin": 6, "ymin": 6, "xmax": 9, "ymax": 9}},
