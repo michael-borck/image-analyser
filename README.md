@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/image-analyser.svg)](https://pypi.org/project/image-analyser/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Static image analysis (CLI + FastAPI) for the analyser family.
+Static image analysis (CLI + FastAPI) for the [analyser family](https://github.com/michael-borck/lens-analysers).
 
 Given a single image file, image-analyser returns:
 
