@@ -58,6 +58,12 @@ def serve(
     uvicorn.run("image_analyser.app:app", host=host, port=port, reload=reload)
 
 
+@cli.command(help="Print the capability manifest as JSON.")
+def manifest() -> None:
+    from .manifest import MANIFEST
+    typer.echo(_json.dumps(MANIFEST, indent=2))
+
+
 @cli.callback(invoke_without_command=True)
 def _root(
     ctx: typer.Context,
@@ -75,7 +81,7 @@ def main() -> None:
     # Make `image-analyser FILE [--json]` work as well as `image-analyser analyse FILE`.
     # Typer doesn't support this natively, so we promote a bare positional to the analyse command.
     argv = sys.argv[1:]
-    if argv and not argv[0].startswith("-") and argv[0] not in {"analyse", "serve"}:
+    if argv and not argv[0].startswith("-") and argv[0] not in {"analyse", "serve", "manifest"}:
         sys.argv = [sys.argv[0], "analyse", *argv]
     cli(prog_name="image-analyser")
 

@@ -13,9 +13,12 @@ def _run(*args, cwd=None):
 
 
 def test_version_flag(tmp_path):
+    from importlib.metadata import version
+
     p = _run("--version")
     assert p.returncode == 0
-    assert "0.1.0" in p.stdout or "0.1.0" in p.stderr
+    pkg_version = version("image-analyser")
+    assert pkg_version in p.stdout or pkg_version in p.stderr
 
 
 def test_help_flag():

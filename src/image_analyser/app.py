@@ -13,6 +13,7 @@ from pydantic import BaseModel, ValidationError
 from .exceptions import UnsupportedFormatError
 from .image_analyser import ImageAnalyser
 from .schemas import AnalysisResult
+from .manifest import MANIFEST
 
 
 def _origins() -> list[str]:
@@ -64,6 +65,10 @@ def create_app() -> FastAPI:
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok", "version": _pkg_version("image-analyser")}
+
+    @app.get("/manifest")
+    def manifest() -> dict:
+        return MANIFEST
 
     @app.get("/")
     def root() -> dict[str, object]:
