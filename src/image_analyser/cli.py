@@ -1,18 +1,20 @@
-"""Typer-based CLI for image-analyser."""
+"""CLI entry point for image-analyser (argparse + lens-contract, the family pattern).
+
+Usage:
+  image-analyser photo.jpg
+  image-analyser photo.jpg --json
+  image-analyser photo.jpg --only metadata,quality
+  image-analyser serve
+  image-analyser serve --port 8006 --host 0.0.0.0
+  image-analyser manifest
+"""
 
 from __future__ import annotations
 
 import json as _json
-import os
 import sys
 from importlib.metadata import version as _pkg_version
 from pathlib import Path
-
-import typer
-
-from .exceptions import ImageAnalyserError, UnsupportedFormatError
-
-cli = typer.Typer(add_completion=False, no_args_is_help=True)
 
 
 def _csv(value: str | None) -> list[str] | None:
@@ -21,69 +23,64 @@ def _csv(value: str | None) -> list[str] | None:
     return [v.strip() for v in value.split(",") if v.strip()]
 
 
-@cli.command(help="Analyse a single image and print the result as JSON.")
-def analyse(
-    file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),  # noqa: B008
-    json_out: bool = typer.Option(False, "--json", help="Compact JSON output."),
-    skip: str | None = typer.Option(None, "--skip", help="Comma-separated analyses to skip."),
-    only: str | None = typer.Option(None, "--only", help="Comma-separated analyses to run (mutex with --skip)."),
-    caption_backend: str | None = typer.Option(None, "--caption-backend", help="local|api|auto|none"),
-) -> None:
+def main() -> None:
+    import argparse
+
+    from lens_contract import run_contract_subcommands
+
+    from .manifest import MANIFEST
+
+    # `serve` and `manifest` are the family's shared subcommands (lens-contract).
+    if run_contract_subcommands(
+        MANIFEST,
+        app_path="image_analyser.api:app",
+        default_port=8006,
+        env_prefix="IMAGE_ANALYSER",
+    ):
+        return
+
+    parser = argparse.ArgumentParser(
+        prog="image-analyser",
+        description="Static image analysis (CLI + FastAPI) for the analyser family",
+        epilog="subcommands: `serve` (run the HTTP API), `manifest` (print the capability manifest)",
+    )
+    parser.add_argument(
+        "--version", action="version", version=_pkg_version("image-analyser")
+    )
+    parser.add_argument("file", type=Path, help="image file to analyse")
+    parser.add_argument(
+        "--json", action="store_true", dest="compact", help="compact JSON (default is indented)"
+    )
+    parser.add_argument("--skip", help="comma-separated analyses to skip")
+    parser.add_argument("--only", help="comma-separated analyses to run (mutex with --skip)")
+    parser.add_argument(
+        "--caption-backend", dest="caption_backend", help="local|api|auto|none"
+    )
+    _cmd_analyse(parser.parse_args())
+
+
+def _cmd_analyse(args) -> None:
     from .image_analyser import ImageAnalyser
+    from .exceptions import ImageAnalyserError, UnsupportedFormatError
+
+    if not args.file.exists():
+        print(f"error: file not found: {args.file}", file=sys.stderr)
+        sys.exit(2)
+
     try:
         analyser = ImageAnalyser(
-            skip=_csv(skip), only=_csv(only), caption_backend=caption_backend,
+            skip=_csv(args.skip), only=_csv(args.only), caption_backend=args.caption_backend
         )
-        result = analyser.analyse(file)
-    except ValueError as e:
-        typer.echo(f"error: {e}", err=True)
-        raise typer.Exit(code=2) from e
-    except UnsupportedFormatError as e:
-        typer.echo(f"error: {e}", err=True)
-        raise typer.Exit(code=2) from e
+        result = analyser.analyse(args.file)
+    except (ValueError, UnsupportedFormatError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        sys.exit(2)
     except ImageAnalyserError as e:
-        typer.echo(f"error: {e}", err=True)
-        raise typer.Exit(code=1) from e
+        print(f"error: {e}", file=sys.stderr)
+        sys.exit(1)
+
     payload = result.model_dump(mode="json")
-    typer.echo(_json.dumps(payload, separators=(",", ":")) if json_out else _json.dumps(payload, indent=2))
-
-
-@cli.command(help="Start the FastAPI HTTP server.")
-def serve(
-    port: int = typer.Option(int(os.getenv("IMAGE_ANALYSER_PORT", "8006")), "--port"),
-    host: str = typer.Option(os.getenv("IMAGE_ANALYSER_HOST", "127.0.0.1"), "--host"),
-    reload: bool = typer.Option(False, "--reload"),
-) -> None:
-    import uvicorn
-    uvicorn.run("image_analyser.app:app", host=host, port=port, reload=reload)
-
-
-@cli.command(help="Print the capability manifest as JSON.")
-def manifest() -> None:
-    from .manifest import MANIFEST
-    typer.echo(_json.dumps(MANIFEST, indent=2))
-
-
-@cli.callback(invoke_without_command=True)
-def _root(
-    ctx: typer.Context,
-    version: bool = typer.Option(False, "--version", is_eager=True, help="Show version and exit."),
-) -> None:
-    if version:
-        typer.echo(_pkg_version("image-analyser"))
-        raise typer.Exit()
-    if ctx.invoked_subcommand is None:
-        typer.echo(ctx.get_help())
-        raise typer.Exit()
-
-
-def main() -> None:
-    # Make `image-analyser FILE [--json]` work as well as `image-analyser analyse FILE`.
-    # Typer doesn't support this natively, so we promote a bare positional to the analyse command.
-    argv = sys.argv[1:]
-    if argv and not argv[0].startswith("-") and argv[0] not in {"analyse", "serve", "manifest"}:
-        sys.argv = [sys.argv[0], "analyse", *argv]
-    cli(prog_name="image-analyser")
+    print(_json.dumps(payload, separators=(",", ":")) if args.compact else _json.dumps(payload, indent=2))
 
 
 if __name__ == "__main__":

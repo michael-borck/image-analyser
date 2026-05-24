@@ -5,7 +5,7 @@ from importlib.metadata import version as _v
 
 from fastapi.testclient import TestClient
 
-from image_analyser.app import app
+from image_analyser.api import app
 
 client = TestClient(app)
 
@@ -13,7 +13,11 @@ client = TestClient(app)
 def test_health_returns_ok_and_version():
     r = client.get("/health")
     assert r.status_code == 200
-    assert r.json() == {"status": "ok", "version": _v("image-analyser")}
+    body = r.json()
+    # /health now comes from lens_contract.add_contract_routes (status/version/uptime).
+    assert body["status"] == "ok"
+    assert body["version"] == _v("image-analyser")
+    assert isinstance(body["uptime"], float)
 
 
 def test_root_returns_service_info():

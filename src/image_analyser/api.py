@@ -3,22 +3,16 @@
 from __future__ import annotations
 
 import os
-from importlib.metadata import version as _pkg_version
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
+from lens_contract import add_contract_routes, add_cors, add_rate_limit
 from pydantic import BaseModel, ValidationError
 
 from .exceptions import UnsupportedFormatError
 from .image_analyser import ImageAnalyser
 from .schemas import AnalysisResult
 from .manifest import MANIFEST
-
-
-def _origins() -> list[str]:
-    raw = os.getenv("IMAGE_ANALYSER_ALLOWED_ORIGINS", "*")
-    return [o.strip() for o in raw.split(",") if o.strip()]
 
 
 def _max_upload_bytes() -> int:
@@ -52,29 +46,21 @@ def _build_analyser(
 def create_app() -> FastAPI:
     app = FastAPI(
         title="image-analyser",
-        version=_pkg_version("image-analyser"),
+        version=MANIFEST["version"],
         description="Static image analysis (CLI + FastAPI) for the analyser family",
     )
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=_origins(),
-        allow_methods=["GET", "POST", "OPTIONS"],
-        allow_headers=["*"],
-    )
-
-    @app.get("/health")
-    def health() -> dict[str, str]:
-        return {"status": "ok", "version": _pkg_version("image-analyser")}
-
-    @app.get("/manifest")
-    def manifest() -> dict:
-        return MANIFEST
+    # GET /health and GET /manifest (the family contract, via lens-contract).
+    add_contract_routes(app, MANIFEST)
+    # CORS — env-driven: IMAGE_ANALYSER_MODE=desktop (Electron) or IMAGE_ANALYSER_ALLOWED_ORIGINS.
+    add_cors(app, env_prefix="IMAGE_ANALYSER")
+    # Opt-in rate limiting — IMAGE_ANALYSER_RATE_LIMIT_ENABLED=true (needs the [ratelimit] extra).
+    add_rate_limit(app, env_prefix="IMAGE_ANALYSER")
 
     @app.get("/")
     def root() -> dict[str, object]:
         return {
             "service": "image-analyser",
-            "version": _pkg_version("image-analyser"),
+            "version": MANIFEST["version"],
             "endpoints": ["/analyse", "/health"],
         }
 

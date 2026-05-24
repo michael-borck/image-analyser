@@ -6,7 +6,7 @@ from importlib.metadata import version as _v
 from fastapi.testclient import TestClient
 
 from image_analyser import AnalysisResult, ImageAnalyser, __version__
-from image_analyser.app import app
+from image_analyser.api import app
 
 
 def test_package_dunder_version_matches_metadata():

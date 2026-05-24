@@ -1,22 +1,12 @@
 """Capability manifest for the lens family (consumed by auto-analyser)."""
 from __future__ import annotations
 
-from importlib.metadata import PackageNotFoundError, version
+from lens_contract import make_manifest
 
-
-def _version() -> str:
-    try:
-        return version("image-analyser")
-    except PackageNotFoundError:
-        return "0.0.0"
-
-
-MANIFEST: dict = {
-    "name": "image-analyser",
-    "version": _version(),
-    "role": "analyser",
-    "accepts": ["image"],
-    "extensions": [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".tif", ".webp"],
-    "auto_routable": True,
-    "produces": "AnalysisResult",
-}
+MANIFEST = make_manifest(
+    name="image-analyser",
+    accepts=["image"],
+    extensions=[".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".tif", ".webp"],
+    auto_routable=True,
+    produces="AnalysisResult",
+)

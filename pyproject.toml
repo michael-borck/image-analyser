@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "image-analyser"
-version = "0.2.0"
+version = "0.3.0"
 description = "Static image analysis (CLI + FastAPI) for the analyser family"
 readme = "README.md"
 license = {text = "MIT"}
@@ -30,10 +30,11 @@ dependencies = [
     "pydantic>=2.6",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
-    "typer>=0.12",
     "python-magic>=0.4.27",
     "python-multipart>=0.0.9",
-    "slowapi>=0.1.9",
+    # Contract scaffolding; [ratelimit] brings slowapi for add_rate_limit.
+    # (CLI is argparse + run_contract_subcommands now — typer dropped.)
+    "lens-contract[ratelimit]>=0.2.0",
 ]
 
 [project.optional-dependencies]
@@ -50,6 +51,11 @@ dev = [
     "build>=1.2",
     "twine>=5",
 ]
+
+# Local dev: resolve lens-contract from the sibling checkout. uv strips this from
+# the published wheel, which keeps the plain `lens-contract[ratelimit]>=0.2.0` PyPI pin.
+[tool.uv.sources]
+lens-contract = { path = "../lens-contract", editable = true }
 
 [project.scripts]
 image-analyser = "image_analyser.cli:main"
