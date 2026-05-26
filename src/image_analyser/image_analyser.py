@@ -15,14 +15,14 @@ from typing import Any
 import pillow_heif  # noqa: F401  # registers HEIF/HEIC opener with Pillow
 from PIL import Image, UnidentifiedImageError
 
-from . import barcode, caption, colour, hashing, metadata, objects, ocr, quality
+from . import barcode, caption, colour, diagram, hashing, metadata, objects, ocr, quality
 from .exceptions import UnsupportedFormatError
 from .schemas import AnalysisResult, Failed, Skipped
 
 logger = logging.getLogger(__name__)
 
 # Toggleable modules (in pipeline order). Format/resolution/file-size are always-on.
-_TOGGLEABLE = ("metadata", "hashing", "quality", "colour", "barcode", "objects", "caption", "ocr")
+_TOGGLEABLE = ("metadata", "hashing", "quality", "colour", "barcode", "objects", "caption", "ocr", "diagram")
 
 
 class ImageAnalyser:
@@ -125,6 +125,15 @@ class ImageAnalyser:
                     skipped.append(Skipped(name="ocr", reason=reason))
                 else:
                     oc = value
+        dg = None
+        if enabled("diagram"):
+            dg_result = self._safe("diagram", failed, lambda: diagram.analyse(img))
+            if dg_result is not None:
+                value, reason = dg_result
+                if reason:
+                    skipped.append(Skipped(name="diagram", reason=reason))
+                else:
+                    dg = value
 
         animation = metadata.animation_info(img)
         return AnalysisResult(
@@ -146,6 +155,7 @@ class ImageAnalyser:
             objects=objs,
             caption=cap,
             ocr=oc,
+            diagram=dg,
             skipped=skipped,
             failed=failed,
             version=self._version,

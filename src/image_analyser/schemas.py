@@ -122,6 +122,18 @@ class Ocr(_Strict):
     average_confidence: float = 0.0  # mean of blocks[].confidence; 0.0 if no blocks
 
 
+class DiagramHint(_Strict):
+    """Classification of *whether* this image is a diagram — feeds auto-analyser's cascade
+    to diagram-analyser. Does NOT extract structure (that's diagram-analyser's job)."""
+
+    is_diagram: bool
+    confidence: float = Field(ge=0.0, le=1.0)
+    kind: str | None = None  # flowchart | uml | er | sequence | state | architecture | mindmap | other | None
+    signals: dict[str, float] = Field(default_factory=dict)  # raw heuristic + sub-scores
+    backend: str = Field(pattern=r"^(heuristic|api)$")
+    model: str | None = None  # e.g. "anthropic/claude-sonnet-4-5"
+
+
 class Skipped(_Strict):
     name: str
     reason: str
@@ -152,6 +164,7 @@ class AnalysisResult(_Strict):
     objects: list[Object] | None = None
     caption: Caption | None = None
     ocr: Ocr | None = None
+    diagram: DiagramHint | None = None
     skipped: list[Skipped] = []
     failed: list[Failed] = []
     version: str
