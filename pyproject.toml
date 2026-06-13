@@ -41,6 +41,9 @@ dependencies = [
 ml  = ["torch>=2.2", "transformers>=4.40", "accelerate>=0.30"]
 ocr = ["pytesseract>=0.3.10", "easyocr>=1.7"]
 api = ["anthropic>=0.30", "openai>=1.30", "google-genai>=0.3"]
+embeddings = [
+    "lens-embed[image]>=0.1.1",
+]
 all = ["image-analyser[ml,ocr,api]"]
 dev = [
     "pytest>=8",
@@ -56,6 +59,7 @@ dev = [
 # the published wheel, which keeps the plain `lens-contract[ratelimit]>=0.2.0` PyPI pin.
 [tool.uv.sources]
 lens-contract = { path = "../lens-contract", editable = true }
+lens-embed = { path = "../lens-embed", editable = true }
 
 [project.scripts]
 image-analyser = "image_analyser.cli:main"

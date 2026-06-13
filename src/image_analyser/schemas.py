@@ -170,3 +170,6 @@ class AnalysisResult(_Strict):
     version: str
     analysed_at: str
     duration_ms: int
+    # CLIP image vector from lens-embed (pinned ViT-B-32). Comparable across
+    # members; None unless the [embeddings] extra is installed.
+    embedding: list[float] | None = None

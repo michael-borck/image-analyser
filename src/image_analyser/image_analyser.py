@@ -16,6 +16,7 @@ import pillow_heif  # noqa: F401  # registers HEIF/HEIC opener with Pillow
 from PIL import Image, UnidentifiedImageError
 
 from . import barcode, caption, colour, diagram, hashing, metadata, objects, ocr, quality
+from .embedding import embed_image_vector
 from .exceptions import UnsupportedFormatError
 from .schemas import AnalysisResult, Failed, Skipped
 
@@ -161,6 +162,7 @@ class ImageAnalyser:
             version=self._version,
             analysed_at=datetime.now(UTC).isoformat(timespec="seconds"),
             duration_ms=int((time.perf_counter() - start) * 1000),
+            embedding=embed_image_vector(raw_bytes),
         )
 
     # ---- helpers ----
